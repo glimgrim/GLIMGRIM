@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>THE NODE PROJECT</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #ffffff; color: #111111; line-height: 1.2; letter-spacing: -0.02em;
+            padding: 6vw; display: flex; flex-direction: column; justify-content: space-between; user-select: none;
+        }
+        a { color: inherit; text-decoration: none; }
+        
+        /* 상단 헤더 시스템 통합 고정 구조 */
+        header { 
+            width: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            z-index: 200; 
+            position: relative; 
+        }
+        .header-top-line {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 12px;
+        }
+        .header-brand { font-size: 0.9rem; font-weight: 500; letter-spacing: 0.02em; cursor: pointer; }
+        .nav-links { font-size: 0.75rem; font-weight: 400; letter-spacing: 0.05em; color: #888888; cursor: pointer; transition: color 0.3s ease; }
+        .nav-links:hover { color: #111111; }
+        
+        /* 작품 페이지 서브 네비게이션 바 좌상단 배정 */
+        .page-nav-bar {
+            width: 100%;
+            display: flex; 
+            justify-content: flex-start; 
+            gap: 30px; 
+            margin-top: 15px; 
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            height: 25px;
+            padding-left: 0.5vw; 
+        }
+        .page-nav-bar.reveal { opacity: 1; pointer-events: auto; }
+        
+        .page-nav-menu { 
+            position: relative; 
+            padding-bottom: 15px; 
+        }
+        .page-nav-trigger {
+            font-size: 0.85rem; font-weight: 400; color: #999999; letter-spacing: 0.05em;
+            cursor: pointer; transition: color 0.3s ease;
+        }
+        .page-nav-menu:hover .page-nav-trigger { color: #111111; }
+        
+        .page-nav-trigger .accent-j {
+            color: #800000;
+            transition: color 0.3s ease;
+        }
+        .page-nav-menu:hover .page-nav-trigger .accent-j {
+            color: #a32a2a;
+        }
+        
+        /* 소분류 드롭다운 박스 좌측 정렬 흡착 */
+        .page-nav-dropdown {
+            position: absolute; 
+            top: 22px; 
+            left: 0; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            background: rgba(255, 255, 255, 0.98); 
+            padding: 14px 20px; 
+            border: 0.5px solid #eeeeee; 
+            min-width: 160px; 
+            text-align: left; 
+            opacity: 0; 
+            pointer-events: none; 
+            max-height: 0; 
+            overflow: hidden;
+            transition: opacity 0.2s ease, max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+        .page-nav-menu:hover .page-nav-dropdown { opacity: 1; pointer-events: auto; max-height: 350px; }
+        
+        .page-dropdown-item {
+            font-size: 0.75rem; font-weight: 300; color: #777777; cursor: pointer;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+        .page-dropdown-item:hover { color: #111111; transform: translateX(2px); }
+
+        /* 메인 첫 페이지 스테이지 무대 */
+        .display-stage { 
+            display: flex; flex-grow: 1; width: 100%; position: relative;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .display-stage.inactive { 
+            opacity: 0; 
+            transform: scale(0.99); 
+            pointer-events: none; 
+            display: none !important; 
+        }
+        
+        .cluster-projects { position: absolute; top: 10vh; left: 0; display: flex; flex-direction: column; align-items: flex-start; z-index: 10; }
+        .cluster-works { position: absolute; bottom: 10vh; right: 0; display: flex; flex-direction: column; align-items: flex-end; text-align: right; z-index: 10; }
+        
+        .main-trigger { font-size: clamp(2.5rem, 6vw, 5.5rem); font-weight: 300; letter-spacing: -0.04em; cursor: pointer; transition: color 0.5s ease, letter-spacing 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .main-trigger:hover { color: #999999; letter-spacing: 0.05em; }
+        .main-trigger .accent-j { color: #800000; transition: color 0.5s ease; }
+        .main-trigger:hover .accent-j { color: #a32a2a; }
+        
+        .sub-category-list {
+            display: flex; flex-direction: column; gap: 0.7rem; margin-top: 1.8rem;
+            max-height: 0; opacity: 0; pointer-events: none; overflow: hidden;
+            transition: max-height 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+        }
+        .cluster-projects:hover .sub-category-list { max-height: 300px; opacity: 1; pointer-events: auto; }
+        .cluster-works:hover .sub-category-list { max-height: 450px; opacity: 1; pointer-events: auto; }
+        
+        .sub-item { font-size: clamp(0.9rem, 1.4vw, 1.15rem); font-weight: 300; color: #777777; letter-spacing: 0.02em; cursor: pointer; transition: color 0.3s ease, transform 0.3s ease; }
+        .cluster-projects .sub-item:hover { color: #111111; transform: translateX(6px); }
+        .cluster-works .sub-item:hover { color: #111111; transform: translateX(-6px); }
+        
+        /* 라이트 그린 테두리 라인 각인 프레임 */
+        .main-core-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 340px; 
+            aspect-ratio: 3 / 4;
+            overflow: hidden;
+            z-index: 1;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            border: 1px solid #2a7e43; 
+            padding: 10px; 
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .main-core-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(0.1) contrast(0.98);
+        }
+        
+        /* 호버 시 뒷단에 연동 출현할 미니멀 실루엣 프리뷰 레이어 */
+        .bg-silhouette-preview {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.97);
+            width: 100%; max-width: 320px; aspect-ratio: 3 / 4; pointer-events: none;
+            opacity: 0; z-index: 5; object-fit: cover; filter: grayscale(1) contrast(0.93);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bg-silhouette-preview.active { opacity: 0.15; transform: translate(-50%, -50%) scale(1); }
+
+        /* 공통 작품 페이지 베이스 스타일 */
+        .art-detail-page {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; opacity: 0; pointer-events: none; transform: scale(1.01);
+            transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 80; padding: 14vh 6vw 4vh 6vw; 
+        }
+        .art-detail-page.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+        /* 좌측 뷰어 프레임 소형화 보정 (디렉터님 50% 반감 스피릿 일괄 통일) */
+        .art-left-viewer {
+            width: 60%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;
+        }
+        .art-left-viewer img {
+            width: 100%; max-width: 220px; aspect-ratio: 3 / 4; object-fit: cover;
+            opacity: 0; transform: scale(0.98); cursor: zoom-in;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .art-left-viewer img.reveal { opacity: 1; transform: scale(1); }
+
+        .viewer-caption {
+            margin-top: 1.5rem; font-size: 0.72rem; font-weight: 300; color: #444444; letter-spacing: 0.03em; text-align: center; width: 100%; max-width: 220px; opacity: 0; transition: opacity 0.4s ease;
+        }
+        .viewer-caption.reveal { opacity: 1; }
+        .viewer-caption .title-italic-bold { font-weight: 700; font-style: italic; color: #111111; }
+
+        /* 전 상세 페이지 통일: 스크롤 없는 1:1 정방형 콤팩트 압축 매트릭스 레이아웃 */
+        .art-right-selector {
+            width: 40%; height: 100%; padding-left: 2vw; padding-right: 2vw;
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; /* 5열 구조 밀착 자장 배치 */
+            align-content: center; justify-content: start;
+            max-height: 75vh; overflow: hidden; /* 스크롤바 원천 봉쇄 */
+            align-self: center;
+        }
+
+        /* 격자 슬롯 스타일 (1:1 정방형 완벽 고정) */
+        .art-right-selector .grid-slot {
+            aspect-ratio: 1 / 1 !important; 
+            width: 100%; padding: 4px; border: 0.5px solid #e5e5e5; background-color: #fafafa;
+            cursor: pointer; overflow: hidden; display: flex; justify-content: center; align-items: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+        .art-right-selector .grid-slot:hover { border-color: #111111; transform: translateY(-2px); }
+        .art-right-selector .grid-slot img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(0.2); transition: filter 0.3s; }
+        .art-right-selector .grid-slot:hover img { filter: grayscale(0); }
+        
+        /* Paintings 전용 타임라인 연도 버튼 인터페이스 */
+        .selector-btn {
+            grid-column: span 2; aspect-ratio: 1 / 1; width: 100%; display: flex; justify-content: center; align-items: center;
+            font-size: 0.72rem; font-style: italic; font-weight: 700; color: #888888; letter-spacing: 0.02em;
+            cursor: pointer; transition: color 0.3s ease, border-color 0.3s ease, transform 0.3s ease; 
+            border: 1px solid #800000; background-color: #fafafa; padding: 4px;
+        }
+        .selector-btn:hover { color: #111111; border-color: #a32a2a; transform: translateY(-2px); }
+
+        /* paintings관 우측 하단 유동 복귀용 BACK 버튼 */
+        .paintings-back-btn {
+            grid-column: 1 / -1; font-size: 0.65rem; font-weight: 400; color: #999999; letter-spacing: 0.05em;
+            cursor: pointer; text-align: left; transition: color 0.3s ease; margin-top: 8px; display: none;
+        }
+        .paintings-back-btn:hover { color: #111111; }
+
+        /* paintings관 전용 좌측 뷰어 스케일 50% 반감 유지 */
+        #paintingsPage .art-left-viewer img { max-width: 220px; }
+        #paintingsPage .viewer-caption { max-width: 220px; }
+
+        /* 미니멀 전체화면 오버레이 (라이트박스) */
+        .fullscreen-lightbox {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #ffffff; z-index: 500;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transform: scale(1.02);
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1), transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .fullscreen-lightbox.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+        .lightbox-content-box {
+            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: zoom-out;
+        }
+        .lightbox-img {
+            width: auto; height: auto; max-width: 85vw; max-height: 75vh; object-fit: contain;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+        }
+        .lightbox-caption {
+            margin-top: 2rem; font-size: 0.75rem; font-weight: 300; color: #222222;
+            letter-spacing: 0.04em; text-align: center;
+        }
+        .lightbox-caption .title-italic-bold { font-weight: 700; font-style: italic; color: #111111; }
+
+        /* 라이트박스 제어 헤더 인터페이스 */
+        .lightbox-controls-group {
+            position: absolute; top: 4vw; right: 4vw; display: flex; align-items: center; gap: 24px; z-index: 510;
+        }
+        .lightbox-fullscreen-btn {
+            font-size: 0.72rem; font-weight: 400; color: #999999; letter-spacing: 0.08em; cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .lightbox-fullscreen-btn:hover { color: #111111; }
+        
+        .lightbox-close-btn {
+            font-size: 1.2rem; font-weight: 300; color: #999999; cursor: pointer;
+            width: 30px; height: 30px; display: flex; justify-content: center; align-items: center;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        .lightbox-close-btn:hover { color: #111111; transform: rotate(90deg); }
+
+        /* ABOUT 및 푸터 */
+        .about-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 8vw; pointer-events: none; opacity: 0; z-index: 150;
+            transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(1.01); background-color: #ffffff;
+        }
+        .about-overlay.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+        
+        .close-button {
+            position: fixed; top: 3vw; right: 3vw; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+            cursor: pointer; z-index: 155; background-color: rgba(255, 255, 255, 0.5); padding: 0.3rem 0.8rem;
+            backdrop-filter: blur(4px); transition: background-color 0.3s ease; border: 0.5px solid #eee;
+        }
+        .close-button:hover { background-color: rgba(255, 255, 255, 0.9); }
+
+        .about-director { font-size: clamp(1.2rem, 3vw, 2rem); font-weight: 400; letter-spacing: 0.05em; margin-bottom: 1.5rem; }
+        .about-email { font-size: clamp(0.9rem, 1.8vw, 1.2rem); font-weight: 300; letter-spacing: 0.02em; color: #555555; }
+        .about-desc { font-size: 0.85rem; color: #888888; font-weight: 300; margin-top: 3rem; line-height: 1.6; }
+
+        footer { 
+            width: 100%; display: flex; justify-content: center; z-index: 10;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        footer.inactive { opacity: 0; transform: translateY(10px); pointer-events: none; }
+        .copyright-text { font-size: 0.7rem; color: #888888; font-weight: 300; letter-spacing: 0.03em; }
+    </style>
+</head>
+<body>
+    
+    <header>
+        <div class="header-top-line">
+            <span class="header-brand" id="brandHome">GLIMGRIM=LEE.KEONHYEONG</span>
+            <nav class="nav-links" id="aboutToggle">about</nav>
+        </div>
+        
+        <div class="page-nav-bar" id="subNavBar">
+            <div class="page-nav-menu">
+                <div class="page-nav-trigger">Pro<span class="accent-j">j</span>ects</div>
+                <div class="page-nav-dropdown">
+                    <div class="page-dropdown-item" data-cate="node">node</div>
+                    <div class="page-dropdown-item" data-cate="personal-space">personal space</div>
+                    <div class="page-dropdown-item" data-cate="denying-reality">denying reality</div>
+                </div>
+            </div>
+            <div class="page-nav-menu">
+                <div class="page-nav-trigger">Works</div>
+                <div class="page-nav-dropdown">
+                    <div class="page-dropdown-item" data-cate="paintings">paintings</div>
+                    <div class="page-dropdown-item" data-cate="drawings">drawings</div>
+                    <div class="page-dropdown-item" data-cate="photographs">photographs</div>
+                    <div class="page-dropdown-item" data-cate="design">design</div>
+                    <div class="page-dropdown-item" data-cate="digital-works">digital works</div>
+                    <div class="page-dropdown-item" data-cate="mixed-media">mixed media</div>
+                    <div class="page-dropdown-item" data-cate="music-albums">music albums</div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="display-stage" id="mainStage">
+        <div class="menu-cluster cluster-projects">
+            <h1 class="main-trigger">Pro<span class="accent-j">j</span>ects</h1>
+            <div class="sub-category-list">
+                <div class="sub-item" data-cate="node">node</div>
+                <div class="sub-item" data-cate="personal-space">personal space</div>
+                <div class="sub-item" data-cate="denying-reality">denying reality</div>
+            </div>
+        </div>
+        
+        <div class="main-core-frame">
+            <img src="1.PNG" class="main-core-img" alt="Main Glimgrim Object" />
+        </div>
+        
+        <img src="" class="bg-silhouette-preview" id="silhouetteView" alt="Silhouette Preview" />
+        
+        <div class="menu-cluster cluster-works">
+            <h1 class="main-trigger">Works</h1>
+            <div class="sub-category-list">
+                <div class="sub-item" data-cate="paintings">paintings</div>
+                <div class="sub-item" data-cate="drawings">drawings</div>
+                <div class="sub-item" data-cate="photographs">photographs</div>
+                <div class="sub-item" data-cate="design">design</div>
+                <div class="sub-item" data-cate="digital-works">digital works</div>
+                <div class="sub-item" data-cate="mixed-media">mixed media</div>
+                <div class="sub-item" data-cate="music-albums">music albums</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="nodePage">
+        <div class="art-left-viewer">
+            <img src="nodeframe1.jpeg" id="nodeViewerImg" alt="Selected Node Artwork" />
+            <div class="viewer-caption" id="nodeCaption"></div>
+        </div>
+        <div class="art-right-selector" id="nodeGrid">
+            <div class="grid-slot" data-src="nodeframe1.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe1.jpeg" alt="Node 1" /></div>
+            <div class="grid-slot" data-src="nodeframe2.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe2.jpeg" alt="Node 2" /></div>
+            <div class="grid-slot" data-src="nodeframe3.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe3.jpeg" alt="Node 3" /></div>
+            <div class="grid-slot" data-src="nodeframe4.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe4.jpeg" alt="Node 4" /></div>
+            <div class="grid-slot" data-src="nodeframe5.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe5.jpeg" alt="Node 5" /></div>
+            <div class="grid-slot" data-src="nodeframe6.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe6.jpeg" alt="Node 6" /></div>
+            <div class="grid-slot" data-src="nodeframe7.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe7.jpeg" alt="Node 7" /></div>
+            <div class="grid-slot" data-src="nodeframe8.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe8.jpeg" alt="Node 8" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="personalPage">
+        <div class="art-left-viewer">
+            <img src="personal1.jpeg" id="personalViewerImg" alt="Selected Personal Space Artwork" />
+            <div class="viewer-caption" id="personalCaption"></div>
+        </div>
+        <div class="art-right-selector" id="personalGrid">
+            <div class="grid-slot" data-src="personal1.jpeg" data-title="Poly tunnel.9am" data-meta=", 2021, oil on canvas, 160.6 x 130 cm"><img src="personal1.jpeg" alt="Personal 1" /></div>
+            <div class="grid-slot" data-src="personal2.jpeg" data-title="Polytunnel.12am" data-meta=", 2021, oil on canvas, 160.6 x 130 cm"><img src="personal2.jpeg" alt="Personal 2" /></div>
+            <div class="grid-slot" data-src="personal3.jpeg" data-title="personal space 1" data-meta=", 2023, oil on canvas, 90.9 x 72.5 cm"><img src="personal3.jpeg" alt="Personal 3" /></div>
+            <div class="grid-slot" data-src="personal4.jpeg" data-title="Personal space 2" data-meta=", 2026, oil on canvas, 90.9 x 72.5 cm"><img src="personal4.jpeg" alt="Personal 4" /></div>
+            <div class="grid-slot" data-src="personal5.jpeg" data-title="Personal space 3" data-meta=", 2023, oil on canvas, 90.9 x 72.5 cm"><img src="personal5.jpeg" alt="Personal 5" /></div>
+            <div class="grid-slot" data-src="personal6.jpeg" data-title="Personal space 4" data-meta=", 2023, oil on canvas, 90.9 x 72.5 cm"><img src="personal6.jpeg" alt="Personal 6" /></div>
+            <div class="grid-slot" data-src="personal7.jpeg" data-title="Personal space 5" data-meta=", 2023, mixed media, 20 x 20 cm"><img src="personal7.jpeg" alt="Personal 7" /></div>
+            <div class="grid-slot" data-src="personal8.jpeg" data-title="Personal space 6" data-meta=", 2023, mixed media, 20 x 20 cm"><img src="personal8.jpeg" alt="Personal 8" /></div>
+            <div class="grid-slot" data-src="personal9.jpeg" data-title="We met" data-meta=", 2026, oil on canvas, 122 x 108 cm"><img src="personal9.jpeg" alt="Personal 9" /></div>
+            <div class="grid-slot" data-src="personal10.jpeg" data-title="반갑게 아쉽게" data-meta=", 2023, oil on canvas, 160.6 x 130 cm"><img src="personal10.jpeg" alt="Personal 10" /></div>
+            <div class="grid-slot" data-src="personal11.jpeg" data-title="journey" data-meta=", 2023, oil on canvas, 116.9 x 91 cm"><img src="personal11.jpeg" alt="Personal 11" /></div>
+            <div class="grid-slot" data-src="personal12.jpeg" data-title="영원" data-meta=", 2023, oil on canvas, 140 x 84 cm"><img src="personal12.jpeg" alt="Personal 12" /></div>
+            <div class="grid-slot" data-src="personal13.jpeg" data-title="Living home" data-meta=", 2022, oil on canvas, 116.9 x 91 cm"><img src="personal13.jpeg" alt="Personal 13" /></div>
+            <div class="grid-slot" data-src="personal14.jpeg" data-title="불안히 평안히" data-meta=", 2024, oil on canvas, 160.6 x 130 cm"><img src="personal14.jpeg" alt="Personal 14" /></div>
+            <div class="grid-slot" data-src="personal15.jpeg" data-title="불평안" data-meta=", 2023, oil on canvas, 116.9 x 91 cm"><img src="personal15.jpeg" alt="Personal 15" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="denyPage">
+        <div class="art-left-viewer">
+            <img src="deny1.jpg" id="denyViewerImg" alt="Selected Denying Reality Artwork" />
+            <div class="viewer-caption" id="denyCaption"></div>
+        </div>
+        <div class="art-right-selector" id="denyGrid">
+            <div class="grid-slot" data-src="deny1.jpg" data-title="Denying reality" data-meta=", 2020, oil on canvas, 90 x 72.5 cm"><img src="deny1.jpg" alt="Deny 1" /></div>
+            <div class="grid-slot" data-src="deny2.jpeg" data-title="벽 안" data-meta=", 2020, oil on canvas, 72 x 60.5 cm"><img src="deny2.jpeg" alt="Deny 2" /></div>
+            <div class="grid-slot" data-src="deny3.jpeg" data-title="Balloons,Blance" data-meta=", 2020, oil on canvas, 90.9 x 72.5 cm"><img src="deny3.jpeg" alt="Deny 3" /></div>
+            <div class="grid-slot" data-src="deny4.jpeg" data-title="Invader" data-meta=", 2020, oil on canvas, 117 x 91 cm"><img src="deny4.jpeg" alt="Deny 4" /></div>
+            <div class="grid-slot" data-src="deny5.jpg" data-title="Sunrise" data-meta=", 2020, oil on canvas, 90.9 x 72.5 cm"><img src="deny5.jpg" alt="Deny 5" /></div>
+            <div class="grid-slot" data-src="deny6.jpeg" data-title="Own my sun" data-meta=", 2019, oil on canvas, 90.9 x 72.5 cm"><img src="deny6.jpeg" alt="Deny 6" /></div>
+            <div class="grid-slot" data-src="deny7.jpeg" data-title="get here before" data-meta=", 2020, oil on canvas, 72 x 60.5 cm"><img src="deny7.jpeg" alt="Deny 7" /></div>
+            <div class="grid-slot" data-src="deny8.jpeg" data-title="Balance out" data-meta=", 2020, oil on canvas, 90.9 x 72.5 cm"><img src="deny8.jpeg" alt="Deny 8" /></div>
+            <div class="grid-slot" data-src="deny9.jpg" data-title="내가 좋아했던 것들 속으로" data-meta=", 2020, oil on canvas, 41 x 53 cm"><img src="deny9.jpg" alt="Deny 9" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="drawingsPage">
+        <div class="art-left-viewer">
+            <img src="drawings1.jpeg" id="drawingsViewerImg" alt="Selected Drawings Artwork" />
+            <div class="viewer-caption" id="drawingsCaption"></div>
+        </div>
+        <div class="art-right-selector" id="drawingsGrid">
+            <div class="grid-slot" data-src="drawings1.jpeg" data-title="Fuck to you, text" data-meta=", 2021, pen on paper, 40 x 29.7 cm"><img src="drawings1.jpeg" alt="Drawing 1" /></div>
+            <div class="grid-slot" data-src="drawings2.jpeg" data-title="polytunnel" data-meta=", 2023, pen on paper, 10.5 x 7.5 cm"><img src="drawings2.jpeg" alt="Drawing 2" /></div>
+            <div class="grid-slot" data-src="drawings3.jpeg" data-title="polytunnel" data-meta=", 2023, pen on paper, 10.5 x 7.5 cm"><img src="drawings3.jpeg" alt="Drawing 3" /></div>
+            <div class="grid-slot" data-src="drawings4.jpeg" data-title="Untitled" data-meta=", 2019, charcoal on paper, 54.5 x 39.4 cm"><img src="drawings4.jpeg" alt="Drawing 4" /></div>
+            <div class="grid-slot" data-src="drawings5.jpeg" data-title="untitled" data-meta=", 2023, pen on paper, 16.8 x 11.5 cm"><img src="drawings5.jpeg" alt="Drawing 5" /></div>
+            <div class="grid-slot" data-src="drawings6.jpeg" data-title="page" data-meta=", 2023, pen on paper, 16.8 x 11.5 cm"><img src="drawings6.jpeg" alt="Drawing 6" /></div>
+            <div class="grid-slot" data-src="drawings7.jpeg" data-title="shower" data-meta=", 2018, oil pastel on paper, 16.8 x 11.5 cm"><img src="drawings7.jpeg" alt="Drawing 7" /></div>
+            <div class="grid-slot" data-src="drawings8.jpeg" data-title="untitled" data-meta=", 2018, charcoal and pen on paper, 16.8 x 11.5 cm"><img src="drawings8.jpeg" alt="Drawing 8" /></div>
+            <div class="grid-slot" data-src="drawings9.jpeg" data-title="dancer" data-meta=", 2019, charcoal and oil pastel on paper, 16.8 x 11.5 cm"><img src="drawings9.jpeg" alt="Drawing 9" /></div>
+            <div class="grid-slot" data-src="drawing10.png" data-title="poly" data-meta=", 2023, pen on paper, 16.8 x 11.5 cm"><img src="drawing10.png" alt="Drawing 10" /></div>
+            <div class="grid-slot" data-src="drawing11.png" data-title="poly" data-meta=", 2023, pen on paper, 16.8 x 11.5 cm"><img src="drawing11.png" alt="Drawing 11" /></div>
+            <div class="grid-slot" data-src="drawings12.png" data-title="page" data-meta=", 2023, pen on paper, 16.8 x 11.5 cm"><img src="drawings12.png" alt="Drawing 12" /></div>
+            <div class="grid-slot" data-src="drawings13.png" data-title="page" data-meta=", 2023, pen on paper, 16.8 x 11.5 cm"><img src="drawings13.png" alt="Drawing 13" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="photographsPage">
+        <div class="art-left-viewer">
+            <img src="p1.jpeg" id="photographsViewerImg" alt="Selected Photographs Artwork" />
+            <div class="viewer-caption" id="photographsCaption"></div>
+        </div>
+        <div class="art-right-selector" id="photographsGrid">
+            <div class="grid-slot" data-src="p1.jpeg" data-title="polytunnel 1" data-meta=", 2022, archival pigment print"><img src="p1.jpeg" alt="Photo 1" /></div>
+            <div class="grid-slot" data-src="p2.jpeg" data-title="polytunnel 2" data-meta=", 2022, archival pigment print"><img src="p2.jpeg" alt="Photo 2" /></div>
+            <div class="grid-slot" data-src="p3.jpeg" data-title="polytunnel 3" data-meta=", 2022, archival pigment print"><img src="p3.jpeg" alt="Photo 3" /></div>
+            <div class="grid-slot" data-src="p4.jpeg" data-title="polytunnel 4" data-meta=", 2022, archival pigment print"><img src="p4.jpeg" alt="Photo 4" /></div>
+            <div class="grid-slot" data-src="p5.jpeg" data-title="polytunnel 5" data-meta=", 2022, archival pigment print"><img src="p5.jpeg" alt="Photo 5" /></div>
+            <div class="grid-slot" data-src="p6.jpeg" data-title="polytunnel 6" data-meta=", 2022, archival pigment print"><img src="p6.jpeg" alt="Photo 6" /></div>
+            <div class="grid-slot" data-src="p7.jpeg" data-title="polytunnel 7" data-meta=", 2022, archival pigment print"><img src="p7.jpeg" alt="Photo 7" /></div>
+            <div class="grid-slot" data-src="p8.jpeg" data-title="polytunnel 8" data-meta=", 2022, archival pigment print"><img src="p8.jpeg" alt="Photo 8" /></div>
+            <div class="grid-slot" data-src="p9.jpeg" data-title="polytunnel 9" data-meta=", 2022, archival pigment print"><img src="p9.jpeg" alt="Photo 9" /></div>
+            <div class="grid-slot" data-src="p10.jpeg" data-title="polytunnel 10" data-meta=", 2022, archival pigment print"><img src="p10.jpeg" alt="Photo 10" /></div>
+            <div class="grid-slot" data-src="p11.jpeg" data-title="polytunnel 11" data-meta=", 2022, archival pigment print"><img src="p11.jpeg" alt="Photo 11" /></div>
+            <div class="grid-slot" data-src="p12.jpeg" data-title="polytunnel 12" data-meta=", 2022, archival pigment print"><img src="p12.jpeg" alt="Photo 12" /></div>
+            <div class="grid-slot" data-src="p13.jpeg" data-title="polytunnel 13" data-meta=", 2022, archival pigment print"><img src="p13.jpeg" alt="Photo 13" /></div>
+            <div class="grid-slot" data-src="p14.jpeg" data-title="polytunnel 14" data-meta=", 2022, archival pigment print"><img src="p14.jpeg" alt="Photo 14" /></div>
+            <div class="grid-slot" data-src="p15.jpeg" data-title="polytunnel 15" data-meta=", 2022, archival pigment print"><img src="p15.jpeg" alt="Photo 15" /></div>
+            <div class="grid-slot" data-src="p16.jpeg" data-title="polytunnel 16" data-meta=", 2022, archival pigment print"><img src="p16.jpeg" alt="Photo 16" /></div>
+            <div class="grid-slot" data-src="p17.jpeg" data-title="polytunnel 17" data-meta=", 2022, archival pigment print"><img src="p17.jpeg" alt="Photo 17" /></div>
+            <div class="grid-slot" data-src="p18.jpeg" data-title="polytunnel 18" data-meta=", 2022, archival pigment print"><img src="p18.jpeg" alt="Photo 18" /></div>
+            <div class="grid-slot" data-src="p19.jpeg" data-title="polytunnel 19" data-meta=", 2022, archival pigment print"><img src="p19.jpeg" alt="Photo 19" /></div>
+            <div class="grid-slot" data-src="p20.jpeg" data-title="polytunnel 20" data-meta=", 2022, archival pigment print"><img src="p20.jpeg" alt="Photo 20" /></div>
+            <div class="grid-slot" data-src="p21.jpeg" data-title="polytunnel 21" data-meta=", 2022, archival pigment print"><img src="p21.jpeg" alt="Photo 21" /></div>
+            <div class="grid-slot" data-src="p22.jpeg" data-title="polytunnel 22" data-meta=", 2022, archival pigment print"><img src="p22.jpeg" alt="Photo 22" /></div>
+            <div class="grid-slot" data-src="p23.jpeg" data-title="polytunnel 23" data-meta=", 2022, archival pigment print"><img src="p23.jpeg" alt="Photo 23" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="digitalWorksPage">
+        <div class="art-left-viewer">
+            <img src="d1.jpeg" id="digitalWorksViewerImg" alt="Selected Digital Works Artwork" />
+            <div class="viewer-caption" id="digitalWorksCaption"></div>
+        </div>
+        <div class="art-right-selector" id="digitalWorksGrid">
+            <div class="grid-slot" data-src="d1.jpeg" data-title="untitled" data-meta=", 2016, digital media"><img src="d1.jpeg" alt="untitled" /></div>
+            <div class="grid-slot" data-src="d2.jpeg" data-title="orange1" data-meta=", 2016, digital media"><img src="d2.jpeg" alt="orange1" /></div>
+            <div class="grid-slot" data-src="d3.jpeg" data-title="orange2" data-meta=", 2016, digital media"><img src="d3.jpeg" alt="orange2" /></div>
+            <div class="grid-slot" data-src="d4.jpeg" data-title="pattern1" data-meta=", 2016, digital media"><img src="d4.jpeg" alt="pattern1" /></div>
+            <div class="grid-slot" data-src="d5.jpeg" data-title="pattern2" data-meta=", 2016, digital media"><img src="d5.jpeg" alt="pattern2" /></div>
+            <div class="grid-slot" data-src="d6.jpeg" data-title="memo" data-meta=", 2017, digital media"><img src="d6.jpeg" alt="memo" /></div>
+            <div class="grid-slot" data-src="d7.jpeg" data-title="hsh" data-meta=", 2018, digital media"><img src="d7.jpeg" alt="hsh" /></div>
+            <div class="grid-slot" data-src="d8.jpeg" data-title="place" data-meta=", 2018, digital media"><img src="d8.jpeg" alt="Digital 8" /></div>
+            <div class="grid-slot" data-src="d9.jpeg" data-title="death" data-meta=", 2018, digital media"><img src="d9.jpeg" alt="Digital 9" /></div>
+            <div class="grid-slot" data-src="d10.jpeg" data-title="my place" data-meta=", 2018, digital media"><img src="d10.jpeg" alt="Digital 10" /></div>
+            <div class="grid-slot" data-src="d11.jpeg" data-title="my place2" data-meta=", 2018, digital media"><img src="d11.jpeg" alt="Digital 11" /></div>
+            <div class="grid-slot" data-src="d12.jpeg" data-title="untitled" data-meta=", 2019, digital media"><img src="d12.jpeg" alt="Digital 12" /></div>
+            <div class="grid-slot" data-src="d13.jpeg" data-title="boy" data-meta=", 2024, digital media"><img src="d13.jpeg" alt="Digital 13" /></div>
+            <div class="grid-slot" data-src="d14.jpeg" data-title="ploy way" data-meta=", 2024, digital media"><img src="d14.jpeg" alt="Digital 14" /></div>
+            <div class="grid-slot" data-src="d15.jpeg" data-title="three polys" data-meta=", 2024, digital media"><img src="d15.jpeg" alt="Digital 15" /></div>
+            <div class="grid-slot" data-src="d16.jpeg" data-title="ma place" data-meta=", 2024, digital media"><img src="d16.jpeg" alt="Digital 16" /></div>
+            <div class="grid-slot" data-src="d17.png" data-title="old man" data-meta=", 2024, digital media"><img src="d17.png" alt="Digital 17" /></div>
+            <div class="grid-slot" data-src="d18.jpeg" data-title="untitled" data-meta=", 2024, digital media"><img src="d18.jpeg" alt="Digital 18" /></div>
+            <div class="grid-slot" data-src="d19.jpeg" data-title="vanishing point" data-meta=", 2024, digital media"><img src="d19.jpeg" alt="Digital 19" /></div>
+            <div class="grid-slot" data-src="d20.png" data-title="polytunnel.9am.wide" data-meta=", 2024, digital media"><img src="d20.png" alt="Digital 20" /></div>
+            <div class="grid-slot" data-src="d21.png" data-title="untitled" data-meta=", 2024, digital media"><img src="d21.png" alt="Digital 21" /></div>
+            <div class="grid-slot" data-src="d22.jpeg" data-title="untitled" data-meta=", 2026, digital media"><img src="d22.jpeg" alt="Digital 22" /></div>
+            <div class="grid-slot" data-src="d23.jpeg" data-title="node" data-meta=", 2026, digital media"><img src="d23.jpeg" alt="Digital 23" /></div>
+            <div class="grid-slot" data-src="d24.jpeg" data-title="untitled" data-meta=", 2026, digital media"><img src="d24.jpeg" alt="Digital 24" /></div>
+            <div class="grid-slot" data-src="d25.jpeg" data-title="untitled" data-meta=", 2026, digital media"><img src="d25.jpeg" alt="Digital 25" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="mixedMediaPage">
+        <div class="art-left-viewer">
+            <img src="nodeframe1.jpeg" id="mixedMediaViewerImg" alt="Selected Mixed Media Artwork" />
+            <div class="viewer-caption" id="mixedMediaCaption"></div>
+        </div>
+        <div class="art-right-selector" id="mixedMediaGrid">
+            <div class="grid-slot" data-src="nodeframe1.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe1.jpeg" alt="Mixed Media 1" /></div>
+            <div class="grid-slot" data-src="nodeframe2.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe2.jpeg" alt="Mixed Media 2" /></div>
+            <div class="grid-slot" data-src="nodeframe3.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe3.jpeg" alt="Mixed Media 3" /></div>
+            <div class="grid-slot" data-src="nodeframe4.jpeg" data-title="Node frame 1" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe4.jpeg" alt="Mixed Media 4" /></div>
+            <div class="grid-slot" data-src="nodeframe5.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe5.jpeg" alt="Mixed Media 5" /></div>
+            <div class="grid-slot" data-src="nodeframe6.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe6.jpeg" alt="Mixed Media 6" /></div>
+            <div class="grid-slot" data-src="nodeframe7.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe7.jpeg" alt="Mixed Media 7" /></div>
+            <div class="grid-slot" data-src="nodeframe8.jpeg" data-title="Node frame 2" data-meta=", 2026, mixed media, 15 x 20 cm"><img src="nodeframe8.jpeg" alt="Mixed Media 8" /></div>
+            <div class="grid-slot" data-src="nodeframe9.png" data-title="Extremely personal" data-meta=", 2021, mixed media, 72.8 x 91 cm"><img src="nodeframe9.png" alt="Mixed Media 2" /></div>
+        </div>
+    </div>
+
+    <div class="art-detail-page" id="paintingsPage">
+        <div class="art-left-viewer">
+            <img src="personal10.jpeg" id="paintingsViewerImg" alt="Selected Paintings Artwork" />
+            <div class="viewer-caption" id="paintingsCaption"></div>
+        </div>
+        <div class="art-right-selector" id="paintingsSelector">
+            <div class="selector-btn" data-timeline="2020" id="btnTimeline2020">~2020</div>
+            <div class="selector-btn" data-timeline="2026" id="btnTimeline2026">~2026</div>
+            <div class="paintings-back-btn" id="paintingsBackBtn">← BACK TO TIMELINE</div>
+        </div>
+    </div>
+
+    <div class="fullscreen-lightbox" id="fullscreenLightbox">
+        <div class="lightbox-controls-group">
+            <div class="lightbox-fullscreen-btn" id="goDeviceFullscreen">FULLSCREEN</div>
+            <div class="lightbox-close-btn" id="closeLightbox">✕</div>
+        </div>
+        <div class="lightbox-content-box" id="lightboxContent">
+            <img src="" class="lightbox-img" id="lightboxTargetImg" alt="Fullscreen View" />
+            <div class="lightbox-caption" id="lightboxTargetCaption"></div>
+        </div>
+    </div>
+
+    <div class="about-overlay" id="aboutOverlay">
+        <div class="close-button" id="closeAbout">CLOSE</div>
+        <h1 class="about-director">GLIMGRIM = LEEKEONHYEONG</h1>
+        <a href="mailto:glimgrim@gmail.com" class="about-email">glimgrim@gmail.com</a>
+        <p class="about-desc">THE NODE PROJECT (2026)<br>MINIMAL AVANT-GARDE ARCHIVE ALL RIGHTS RESERVED.</p>
+    </div>
+
+    <footer id="mainFooter">
+        <span class="copyright-text">© 2026 ARCHIVE. ALL GLIMGRIM=LEEKEONHYEONG RESERVED.</span>
+    </footer>
+
+    <script>
+        const aboutToggle = document.getElementById('aboutToggle');
+        const aboutOverlay = document.getElementById('aboutOverlay');
+        const closeAbout = document.getElementById('closeAbout');
+        const mainStage = document.getElementById('mainStage');
+        const brandHome = document.getElementById('brandHome');
+        const subNavBar = document.getElementById('subNavBar');
+        const mainFooter = document.getElementById('mainFooter');
+        const silhouetteView = document.getElementById('silhouetteView');
+        
+        const nodePage = document.getElementById('nodePage');
+        const nodeViewerImg = document.getElementById('nodeViewerImg');
+        const nodeCaption = document.getElementById('nodeCaption');
+
+        const personalPage = document.getElementById('personalPage');
+        const personalViewerImg = document.getElementById('personalViewerImg');
+        const personalCaption = document.getElementById('personalCaption');
+
+        const denyPage = document.getElementById('denyPage');
+        const denyViewerImg = document.getElementById('denyViewerImg');
+        const denyCaption = document.getElementById('denyCaption');
+
+        const drawingsPage = document.getElementById('drawingsPage');
+        const drawingsViewerImg = document.getElementById('drawingsViewerImg');
+        const drawingsCaption = document.getElementById('drawingsCaption');
+        const drawingsGrid = document.getElementById('drawingsGrid');
+
+        const photographsPage = document.getElementById('photographsPage');
+        const photographsViewerImg = document.getElementById('photographsViewerImg');
+        const photographsCaption = document.getElementById('photographsCaption');
+        const photographsGrid = document.getElementById('photographsGrid');
+
+        // [FIX] 중복 선언 줄인 깔끔한 노드 캐싱 통합 완료
+        const digitalWorksPage = document.getElementById('digitalWorksPage');
+        const digitalWorksViewerImg = document.getElementById('digitalWorksViewerImg');
+        const digitalWorksCaption = document.getElementById('digitalWorksCaption');
+        const digitalWorksGrid = document.getElementById('digitalWorksGrid');
+
+        const mixedMediaPage = document.getElementById('mixedMediaPage');
+        const mixedMediaViewerImg = document.getElementById('mixedMediaViewerImg');
+        const mixedMediaCaption = document.getElementById('mixedMediaCaption');
+        const mixedMediaGrid = document.getElementById('mixedMediaGrid');
+
+        const paintingsPage = document.getElementById('paintingsPage');
+        const paintingsViewerImg = document.getElementById('paintingsViewerImg');
+        const paintingsCaption = document.getElementById('paintingsCaption');
+        const paintingsSelector = document.getElementById('paintingsSelector');
+        const paintingsBackBtn = document.getElementById('paintingsBackBtn');
+        const btnTimeline2020 = document.getElementById('btnTimeline2020');
+        const btnTimeline2026 = document.getElementById('btnTimeline2026');
+
+        const fullscreenLightbox = document.getElementById('fullscreenLightbox');
+        const lightboxTargetImg = document.getElementById('lightboxTargetImg');
+        const lightboxTargetCaption = document.getElementById('lightboxTargetCaption');
+        const closeLightbox = document.getElementById('closeLightbox');
+        const lightboxContent = document.getElementById('lightboxContent');
+        const goDeviceFullscreen = document.getElementById('goDeviceFullscreen');
+
+        let currentActiveOpenPage = null; 
+        let isAboutActive = false;
+
+        // ~2020 타임라인용 독립 가상 데이터셋
+        const paintingsExtra2020Data = [
+            { src: "2020.1.jpeg", title: "Untitled", meta: ", 2016, acrylic on canvas, 45 x 45 cm", year: 2016 },
+            { src: "2020.2.jpeg", title: "Untitled", meta: ", 2016, acrylic on paper, 29.7 x 42 cm", year: 2016 },
+            { src: "2020.3.jpeg", title: "Untitled", meta: ", 2016, acrylic on paper, 29.7 x 42 cm", year: 2016 },
+            { src: "2020.4.jpeg", title: "city", meta: ", 2016, water on paper, 29.7 x 42 cm", year: 2016 },
+            { src: "2020.5.jpeg", title: "Wounded thighs", meta: ", 2017, mixed on canvas, 29.7 x 42 cm", year: 2017 },
+            { src: "2020.6.jpeg", title: "C-no.1", meta: ", 2016, oil on canvas, 45.5 x 33.5 cm", year: 2016 },
+            { src: "2020.7.jpeg", title: "Human beings", meta: ", 2016, oil on canvas, 52.8 x 45 cm", year: 2016 },
+            { src: "2020.8.jpeg", title: "Time", meta: ", 2017, oil on canvas, 52.8 x 45 cm", year: 2017 },
+            { src: "2020.9.jpeg", title: "my place 1", meta: ", 2018, acrylic on paper, 42 x 29.7 cm", year: 2018 },
+            { src: "2020.10.jpeg", title: "my place 2", meta: ", 2018, acrylic on paper, 42 x 29.7 cm", year: 2018 },
+            { src: "2020.11.jpeg", title: "my place 3", meta: ", 2018, acrylic on paper, 42 x 29.7 cm", year: 2018 },
+            { src: "2020.12.jpeg", title: "Brighton", meta: ", 2018, acrylic on canvas, 52.8 x 45 cm", year: 2018 },
+            { src: "2020.13.jpeg", title: "너!", meta: ", 2018, mixed on canvas, 56 x 42 cm", year: 2018 },
+            { src: "2020.14.jpeg", title: "The scenery of imagination", meta: ", 2018, acrylic on wood panel, 42 x 60 cm", year: 2018 },
+            { src: "2020.15.jpeg", title: "reflect", meta: ", 2018, mixed on canvas, 42 x 29.7 cm cm", year: 2018 },
+            { src: "2020.16.jpeg", title: "Untitled", meta: ", 2018, acrylic on canvas, 42 x 29.7 cm", year: 2018 },
+            { src: "2020.17.jpeg", title: "Untitled", meta: ", 2018, acrylic on canvas, 52.8 x 45 cm", year: 2018 }
+        ];
+
+        // ~2026 타임라인 가상 데이터셋
+        const paintingsExtra2026Data = [
+            { src: "2026.1.jpeg", title: "End", meta: ", 2024, oil on canvas, 160.6 x 130 cm", year: 2024 },
+            { src: "2026.2.jpeg", title: "Untitled", meta: ", 2023, oil on canvas, 90.9 x 72.5 cm", year: 2023 },
+            { src: "2026.3.jpeg", title: "Untitled", meta: ", 2023, mixed on canvas, 56 x 42 cm cm", year: 2023 },
+            { src: "2026.4.jpeg", title: "Living things 2", meta: ", 2023, oil on canvas, 116.9 x 91 cm", year: 2023 },
+            { src: "2026.5.jpeg", title: "아기와 형상", meta: ", 2023, oil on canvas, 116.9 x 91 cm", year: 2023 },
+            { src: "2026.6.jpeg", title: "대화하는 것들", meta: ", 2024, oil on canvas, 116.8 x 91 cm", year: 2024 },
+            { src: "2026.7.jpeg", title: "두 소년과 셋", meta: ", 2024, acrylic on canvas, 116.8 x 91 cm", year: 2024 },
+            { src: "2026.8.jpeg", title: "어머니들", meta: ", 2024, acrylic  on canvas, 25 x 25 cm", year: 2024 },
+            { src: "2026.9.jpeg", title: "munch", meta: ", 2025, oil on canvas, 20 x 20 cm", year: 2025 },
+            { src: "2026.10.jpeg", title: "Untitled", meta: ", 2026, oil on canvas, 40 x 40 cm", year: 2026 }
+        ];
+
+        // drawings관 돔 구조 연도순 초기 정렬
+        function sortDrawingsDOM() {
+            const slots = Array.from(drawingsGrid.querySelectorAll('.grid-slot'));
+            slots.sort((a, b) => {
+                const metaA = a.getAttribute('data-meta').match(/\d{4}/);
+                const metaB = b.getAttribute('data-meta').match(/\d{4}/);
+                const yearA = metaA ? parseInt(metaA[0]) : 0;
+                const yearB = metaB ? parseInt(metaB[0]) : 0;
+                return yearA - yearB;
+            });
+            slots.forEach(slot => drawingsGrid.appendChild(slot));
+            
+            if(slots.length > 0) {
+                const initSlot = slots[0];
+                setupViewer(drawingsViewerImg, drawingsCaption, initSlot.getAttribute('data-src'), initSlot.getAttribute('data-title'), initSlot.getAttribute('data-meta'));
+            }
+        }
+
+        // photographs관 돔 구조 연도순 초기 정렬 메커니즘
+        function sortPhotographsDOM() {
+            const slots = Array.from(photographsGrid.querySelectorAll('.grid-slot'));
+            slots.sort((a, b) => {
+                const metaA = a.getAttribute('data-meta').match(/\d{4}/);
+                const metaB = b.getAttribute('data-meta').match(/\d{4}/);
+                const yearA = metaA ? parseInt(metaA[0]) : 0;
+                const yearB = metaB ? parseInt(metaB[0]) : 0;
+                return yearA - yearB;
+            });
+            slots.forEach(slot => photographsGrid.appendChild(slot));
+            
+            if(slots.length > 0) {
+                const initSlot = slots[0];
+                setupViewer(photographsViewerImg, photographsCaption, initSlot.getAttribute('data-src'), initSlot.getAttribute('data-title'), initSlot.getAttribute('data-meta'));
+            }
+        }
+
+        // digital-works관 넘버링 순 정렬 메커니즘 함수
+        function sortDigitalWorksDOM() {
+            const slots = Array.from(digitalWorksGrid.querySelectorAll('.grid-slot'));
+            slots.sort((a, b) => {
+                const numA = parseInt(a.getAttribute('data-src').match(/\d+/)[0]);
+                const numB = parseInt(b.getAttribute('data-src').match(/\d+/)[0]);
+                return numA - numB;
+            });
+            slots.forEach(slot => digitalWorksGrid.appendChild(slot));
+            
+            if(slots.length > 0) {
+                const initSlot = slots[0];
+                setupViewer(digitalWorksViewerImg, digitalWorksCaption, initSlot.getAttribute('data-src'), initSlot.getAttribute('data-title'), initSlot.getAttribute('data-meta'));
+            }
+        }
+
+        // mixed-media관 초기 뷰어 첫 명작 자동 정렬 및 로딩
+        function sortMixedMediaDOM() {
+            const slots = Array.from(mixedMediaGrid.querySelectorAll('.grid-slot'));
+            if(slots.length > 0) {
+                const initSlot = slots[0];
+                setupViewer(mixedMediaViewerImg, mixedMediaCaption, initSlot.getAttribute('data-src'), initSlot.getAttribute('data-title'), initSlot.getAttribute('data-meta'));
+            }
+        }
+
+        sortDrawingsDOM();
+        sortPhotographsDOM();
+        sortDigitalWorksDOM();
+        sortMixedMediaDOM();
+
+        aboutToggle.addEventListener('click', () => {
+            isAboutActive = true;
+            mainStage.classList.add('inactive'); 
+            subNavBar.classList.remove('reveal'); 
+            mainFooter.classList.add('inactive');
+            if(currentActiveOpenPage) currentActiveOpenPage.classList.remove('active');
+            aboutOverlay.classList.add('active');
+        });
+
+        closeAbout.addEventListener('click', () => {
+            isAboutActive = false;
+            aboutOverlay.classList.remove('active');
+            if(currentActiveOpenPage) {
+                currentActiveOpenPage.classList.add('active');
+                subNavBar.classList.add('reveal'); 
+                mainFooter.classList.add('inactive');
+            } else {
+                mainStage.classList.remove('inactive'); 
+                mainFooter.classList.remove('inactive');
+            }
+        });
+
+        brandHome.addEventListener('click', () => {
+            if (isAboutActive) return;
+            if(currentActiveOpenPage) {
+                currentActiveOpenPage.classList.remove('active');
+                currentActiveOpenPage = null;
+            }
+            resetPaintingsSelector(); 
+            subNavBar.classList.remove('reveal'); 
+            mainStage.classList.remove('inactive'); 
+            mainFooter.classList.remove('inactive');
+        });
+
+        const previewMap = {
+            'node': 'nodeframe1.jpeg', 'personal-space': 'personal1.jpeg', 'denying-reality': 'deny1.jpg',
+            'paintings': 'personal10.jpeg', 'drawings': 'drawings1.jpeg', 'photographs': 'p1.jpeg',
+            'design': 'fi1.jpeg', 'digital-works': 'd1.jpeg', 'mixed-media': 'nodeframe1.jpeg', 'music-albums': 'music1.jpeg'
+        };
+
+        function openArtPage(cate) {
+            mainStage.classList.add('inactive'); 
+            mainFooter.classList.add('inactive');
+            subNavBar.classList.add('reveal');
+            
+            if (currentActiveOpenPage) currentActiveOpenPage.classList.remove('active');
+
+            if(cate === 'node') {
+                currentActiveOpenPage = nodePage;
+                setupViewer(nodeViewerImg, nodeCaption, 'nodeframe1.jpeg', 'Node frame 1', ', 2026, mixed media, 15 x 20 cm');
+            } else if(cate === 'personal-space') {
+                currentActiveOpenPage = personalPage;
+                setupViewer(personalViewerImg, personalCaption, 'personal1.jpeg', 'Poly tunnel.9am', ', 2021, oil on canvas, 160.6 x 130 cm');
+            } else if(cate === 'denying-reality') {
+                currentActiveOpenPage = denyPage;
+                setupViewer(denyViewerImg, denyCaption, 'deny1.jpg', 'Denying reality 1', ', 2026, mixed media, 40 x 50 cm');
+            } else if(cate === 'drawings') {
+                currentActiveOpenPage = drawingsPage;
+                const firstSortedSlot = drawingsGrid.querySelectorAll('.grid-slot')[0];
+                if(firstSortedSlot) {
+                    setupViewer(drawingsViewerImg, drawingsCaption, firstSortedSlot.getAttribute('data-src'), firstSortedSlot.getAttribute('data-title'), firstSortedSlot.getAttribute('data-meta'));
+                }
+            } else if(cate === 'photographs') {
+                currentActiveOpenPage = photographsPage;
+                const firstSortedSlot = photographsGrid.querySelectorAll('.grid-slot')[0];
+                if(firstSortedSlot) {
+                    setupViewer(photographsViewerImg, photographsCaption, firstSortedSlot.getAttribute('data-src'), firstSortedSlot.getAttribute('data-title'), firstSortedSlot.getAttribute('data-meta'));
+                }
+            } else if(cate === 'digital-works') {
+                currentActiveOpenPage = digitalWorksPage;
+                const firstSortedSlot = digitalWorksGrid.querySelectorAll('.grid-slot')[0];
+                if(firstSortedSlot) {
+                    setupViewer(digitalWorksViewerImg, digitalWorksCaption, firstSortedSlot.getAttribute('data-src'), firstSortedSlot.getAttribute('data-title'), firstSortedSlot.getAttribute('data-meta'));
+                }
+            } else if(cate === 'mixed-media') {
+                currentActiveOpenPage = mixedMediaPage;
+                const firstSortedSlot = mixedMediaGrid.querySelectorAll('.grid-slot')[0];
+                if(firstSortedSlot) {
+                    setupViewer(mixedMediaViewerImg, mixedMediaCaption, firstSortedSlot.getAttribute('data-src'), firstSortedSlot.getAttribute('data-title'), firstSortedSlot.getAttribute('data-meta'));
+                }
+            } else if(cate === 'paintings') {
+                currentActiveOpenPage = paintingsPage;
+                resetPaintingsSelector();
+            }
+            
+            if(currentActiveOpenPage) currentActiveOpenPage.classList.add('active');
+        }
+
+        function setupViewer(imgNode, captionNode, src, title, meta) {
+            imgNode.src = src;
+            captionNode.innerHTML = `<span class="title-italic-bold">${title}</span>${meta}`;
+            imgNode.classList.add('reveal');
+            captionNode.classList.add('reveal');
+        }
+
+        document.querySelectorAll('.sub-item').forEach(item => {
+            item.addEventListener('mouseenter', (e) => {
+                const cate = e.currentTarget.getAttribute('data-cate');
+                if (previewMap[cate]) {
+                    silhouetteView.src = previewMap[cate];
+                    silhouetteView.classList.add('active');
+                }
+            });
+            item.addEventListener('mouseleave', () => silhouetteView.classList.remove('active'));
+            item.addEventListener('click', (e) => openArtPage(e.currentTarget.getAttribute('data-cate')));
+        });
+
+        document.querySelectorAll('.page-dropdown-item').forEach(item => {
+            item.addEventListener('click', (e) => openArtPage(e.currentTarget.getAttribute('data-cate')));
+        });
+
+        function bindGridClicks(gridId, imgId, captionId) {
+            const viewerImg = document.getElementById(imgId);
+            const viewerCap = document.getElementById(captionId);
+            
+            document.querySelectorAll(`#${gridId} .grid-slot`).forEach(slot => {
+                slot.addEventListener('click', (e) => {
+                    const nextSrc = e.currentTarget.getAttribute('data-src');
+                    const nextTitle = e.currentTarget.getAttribute('data-title');
+                    const nextMeta = e.currentTarget.getAttribute('data-meta');
+                    if (viewerImg.src.includes(nextSrc)) return;
+
+                    viewerImg.classList.remove('reveal');
+                    viewerCap.classList.remove('reveal');
+                    
+                    setTimeout(() => {
+                        viewerImg.src = nextSrc;
+                        viewerCap.innerHTML = `<span class="title-italic-bold">${nextTitle}</span>${nextMeta}`;
+                        viewerImg.classList.add('reveal');
+                        viewerCap.classList.add('reveal');
+                    }, 250);
+                });
+            });
+        }
+
+        bindGridClicks('nodeGrid', 'nodeViewerImg', 'nodeCaption');
+        bindGridClicks('personalGrid', 'personalViewerImg', 'personalCaption');
+        bindGridClicks('denyGrid', 'denyViewerImg', 'denyCaption');
+        bindGridClicks('drawingsGrid', 'drawingsViewerImg', 'drawingsCaption');
+        bindGridClicks('photographsGrid', 'photographsViewerImg', 'photographsCaption');
+        bindGridClicks('digitalWorksGrid', 'digitalWorksViewerImg', 'digitalWorksCaption');
+        bindGridClicks('mixedMediaGrid', 'mixedMediaViewerImg', 'mixedMediaCaption');
+
+        function resetPaintingsSelector() {
+            document.querySelectorAll('#paintingsSelector .grid-slot').forEach(el => el.remove());
+            btnTimeline2020.style.display = 'flex';
+            btnTimeline2026.style.display = 'flex';
+            paintingsBackBtn.style.display = 'none';
+            setupViewer(paintingsViewerImg, paintingsCaption, 'personal10.jpeg', '반갑게 아쉽게', ', 2023, oil on canvas, 160.6 x 130 cm');
+        }
+
+        function injectPaintingsGrid(timeline) {
+            let sourceGridId = (timeline === '2020') ? 'denyGrid' : 'personalGrid';
+            const sourceSlots = document.querySelectorAll(`#${sourceGridId} .grid-slot`);
+            
+            btnTimeline2020.style.display = 'none';
+            btnTimeline2026.style.display = 'none';
+            
+            let slotsArray = Array.from(sourceSlots).map(slot => {
+                const metaText = slot.getAttribute('data-meta');
+                const yearMatch = metaText.match(/\d{4}/);
+                const year = yearMatch ? parseInt(yearMatch[0]) : 0;
+                return { 
+                    isElement: true,
+                    node: slot.cloneNode(true), 
+                    year: year,
+                    src: slot.getAttribute('data-src'),
+                    title: slot.getAttribute('data-title'),
+                    meta: metaText
+                };
+            });
+
+            if (timeline === '2020') {
+                paintingsExtra2020Data.forEach(item => {
+                    slotsArray.push({
+                        isElement: false,
+                        node: null,
+                        year: item.year,
+                        src: item.src,
+                        title: item.title,
+                        meta: item.meta
+                    });
+                });
+            } else if (timeline === '2026') {
+                paintingsExtra2026Data.forEach(item => {
+                    slotsArray.push({
+                        isElement: false,
+                        node: null,
+                        year: item.year,
+                        src: item.src,
+                        title: item.title,
+                        meta: item.meta
+                    });
+                });
+            }
+
+            slotsArray.sort((a, b) => a.year - b.year);
+
+            slotsArray.forEach(item => {
+                let targetSlot;
+                if (item.isElement) {
+                    targetSlot = item.node;
+                } else {
+                    targetSlot = document.createElement('div');
+                    targetSlot.className = 'grid-slot';
+                    targetSlot.setAttribute('data-src', item.src);
+                    targetSlot.setAttribute('data-title', item.title);
+                    targetSlot.setAttribute('data-meta', item.meta);
+                    targetSlot.innerHTML = `<img src="${item.src}" alt="${item.title}" />`;
+                }
+
+                targetSlot.addEventListener('click', (e) => {
+                    const nextSrc = e.currentTarget.getAttribute('data-src');
+                    const nextTitle = e.currentTarget.getAttribute('data-title');
+                    const nextMeta = e.currentTarget.getAttribute('data-meta');
+                    if (paintingsViewerImg.src.includes(nextSrc)) return;
+
+                    paintingsViewerImg.classList.remove('reveal');
+                    paintingsCaption.classList.remove('reveal');
+                    setTimeout(() => {
+                        paintingsViewerImg.src = nextSrc;
+                        paintingsCaption.innerHTML = `<span class="title-italic-bold">${nextTitle}</span>${nextMeta}`;
+                        paintingsViewerImg.classList.add('reveal');
+                        paintingsCaption.classList.add('reveal');
+                    }, 250);
+                });
+                paintingsSelector.insertBefore(targetSlot, paintingsBackBtn);
+            });
+
+            if(slotsArray.length > 0) {
+                const firstItem = slotsArray[0];
+                setupViewer(paintingsViewerImg, paintingsCaption, firstItem.src, firstItem.title, firstItem.meta);
+            }
+
+            paintingsBackBtn.style.display = 'block';
+        }
+
+        btnTimeline2020.addEventListener('click', () => injectPaintingsGrid('2020'));
+        btnTimeline2026.addEventListener('click', () => injectPaintingsGrid('2026'));
+        paintingsBackBtn.addEventListener('click', resetPaintingsSelector);
+
+        function registerLightboxTrigger(imgId, captionId) {
+            const targetImg = document.getElementById(imgId);
+            const targetCap = document.getElementById(captionId);
+
+            targetImg.addEventListener('click', () => {
+                lightboxTargetImg.src = targetImg.src;
+                lightboxTargetCaption.innerHTML = targetCap.innerHTML;
+                fullscreenLightbox.classList.add('active');
+            });
+        }
+        registerLightboxTrigger('nodeViewerImg', 'nodeCaption');
+        registerLightboxTrigger('personalViewerImg', 'personalCaption');
+        registerLightboxTrigger('denyViewerImg', 'denyCaption');
+        registerLightboxTrigger('drawingsViewerImg', 'drawingsCaption');
+        registerLightboxTrigger('photographsViewerImg', 'photographsCaption');
+        registerLightboxTrigger('digitalWorksViewerImg', 'digitalWorksCaption');
+        registerLightboxTrigger('mixedMediaViewerImg', 'mixedMediaCaption');
+        registerLightboxTrigger('paintingsViewerImg', 'paintingsCaption');
+
+        function deactivateLightbox() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+            fullscreenLightbox.classList.remove('active');
+        }
+
+        closeLightbox.addEventListener('click', deactivateLightbox);
+        lightboxContent.addEventListener('click', deactivateLightbox);
+
+        goDeviceFullscreen.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!document.fullscreenElement) {
+                fullscreenLightbox.requestFullscreen().catch(err => {
+                    console.log(`전체화면 에러: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
